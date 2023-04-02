@@ -31,6 +31,13 @@
                 "input": "node_modules/monaco-editor",
                 "output": "assets/monaco-editor"
               },
+              
+                {
+                  "glob": "_redirects",
+                  "input": "src",
+                  "output": "/"
+                }
+              ,
               "src/favicon.ico",
               "src/assets"
             ],
