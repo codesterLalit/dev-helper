@@ -1,0 +1,56 @@
+.data-parser{
+    height: 80vh;
+    background-color: rgba(245, 222, 179, 0.66);
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 20px;
+    &__editors{
+        height: 60vh;
+        background-color: transparent;
+        border-radius: 15px;
+        display: flex;
+
+        &__panel{
+            width: 49%;
+            margin-left: 10px;
+            margin-top: 10px;
+            border: 4px solid rgba(0, 0, 0, 0.166);
+            &-2{
+                background-color: white;
+            }
+        }
+    }
+    &__converter{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        &__convert{
+            display: flex;
+            width: 100%;
+            justify-content: space-around;
+            &__button{
+                display: flex;
+                flex-direction: column;
+                width: 40%;
+            }
+            &__button-2{
+                display: flex;
+                justify-content: flex-start;
+                width: 100%;
+
+                & > button{
+                    margin: 20px;
+                }
+            }
+        }
+    }
+}
+
+//expand true
+::ng-deep .ngx-json-viewer {
+    overflow: auto !important;
+    }
+    
+    
