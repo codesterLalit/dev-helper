@@ -1,103 +1,150 @@
-import { Component } from '@angular/core';
+import { Component } from "@angular/core";
+import { js } from "js-beautify";
 
-@Component({
-  selector: 'app-data-parser',
-  templateUrl: './data-parser.component.html',
-  styleUrls: ['./data-parser.component.scss']
-})
-export class DataParserComponent {
-  constructor() { }
-  dataOperations: DataOperations[] = [
-    {value: 'json-blob', viewValue: 'JSON blob'},
-    {value: 'json-stringify', viewValue: 'Json Stringify'},
-    {value: 'parse-string', viewValue:'Stingified to Object'}
-  ];
+const commonEditorOptions = {
+    theme: "vs",
+    lineNumber: "on",
+    autoIndent: true,
+    minimap: {
+        enabled: false,
+    },
+};
 
-  editor1:any;
-  editor2:any;
-
-  currentOperation:string = this.dataOperations[0].value;
-  editorOptions1 = {theme: 'vs', language: 'json', lineNumber:'on', autoIndent:true};
-  code1: any= '';
-
-  editorOptions2 = {theme: 'vs', language: 'javascript'};
-  code2: any= '';
-  
-  ngOnInit(): void {
-    this.code1 = `{
-      "array": [
-        1,
-        2,
-        3
-      ],
-      "boolean": true,
-      "null": null,
-      "number": 123,
-      "object": {
-        "a": "b",
-        "c": "d",
-        "e": "f"
-      },
-      "string": "Hello World"
-    }`
-  }
-
-  editor1Init(editor:any){
-    this.editor1 = editor;
-  }
-
-  editor2Init(editor:any){
-    this.editor2 = editor;
-  }
-
-  changeOperation(text:string){
-    console.log(text)
-    this.currentOperation = text;
-  }
-
-  convert(operation:string){
-    try{
-      let text = this.code1;
-      console.log(operation)
-      if(operation == 'json-stringify'){
-        this.code2 = JSON.stringify(text)
-        this.editor2.updateOptions({ wordWrap: "bounded" })
-      }
-      if(operation == 'json-blob'){
-      this.code2 = JSON.parse(this.code1)
-      }
-      if(operation == 'parse-string'){
-        try{
-          let code = JSON.parse(this.code1);
-          console.log(typeof code)
-          if((typeof code == 'object')){
-            alert("Sorry! Object cannot be converted to object.")
-            return;
-          }{
-            this.code2 = `${code}`;
-            this.editor2.updateOptions({ wordWrap: "bounded" })
-          }
-        }catch(err){
-          alert("something")
-        }
-
-      }
-    }catch(err){
-      alert(err)
-    }
-  }
-
-  prettify(){
-    this.editor1.getAction('editor.action.formatDocument').run()
-
-  }
-
-  uglify(){
-    this.code1 = this.code1.replaceAll(/\s+|\s+$|\n+|\t/g, '');
-  }
+function prettify(str: string): string {
+    return js(str, { indent_size: 4 });
 }
 
-interface DataOperations{
-  value: string;
-  viewValue: string;
+function uglify(str: string): string {
+    return js(str, {
+        indent_empty_lines: false,
+        preserve_newlines: false,
+        eol: "",
+        indent_size: 0,
+        keep_array_indentation: false,
+        indent_char: "",
+    }).replaceAll('": ', '":');
+}
+
+const initialSourceEditorText = '{"array": [1,2,3],"boolean": true,"null": null,"number": 123,"object": {"a": "b","c": "d","e": "f"},"string": "Hello World"}';
+
+@Component({
+    selector: "app-data-parser",
+    templateUrl: "./data-parser.component.html",
+    styleUrls: ["./data-parser.component.scss"],
+})
+export class DataParserComponent {
+    constructor() {}
+    availableOperations: IOperation[] = [
+        {
+            value: "json-blob",
+            text: "JSON blob",
+            sourceLanguage: "json",
+            outputLanguage: "json",
+        },
+        {
+            value: "json-stringify",
+            text: "JSON Stringify",
+            sourceLanguage: "json",
+            outputLanguage: "",
+        },
+        {
+            value: "json-parse",
+            text: "JSON Parse",
+            sourceLanguage: "",
+            outputLanguage: "json",
+        },
+    ];
+
+    currentOperation: IOperation = this.availableOperations[0];
+
+    sourceEditor: any;
+    sourceEditorText: string = "";
+    sourceEditorOptions = {
+        ...commonEditorOptions,
+        language: this.currentOperation.sourceLanguage,
+    };
+
+    outputEditor: any;
+    outputEditorText: string = "";
+    outputEditorOptions = { ...commonEditorOptions, language: this.currentOperation.outputLanguage };
+
+    ngOnInit(): void {
+        this.sourceEditorText = initialSourceEditorText;
+        this.prettifySource();
+    }
+
+    onSourceEditorInit(editor: any) {
+        this.sourceEditor = editor;
+        this.prettifySource();
+    }
+
+    onOutputEditorInit(editor: any) {
+        this.outputEditor = editor;
+    }
+
+    onOperationChange(operation: IOperation) {
+        this.currentOperation = operation;
+        this.sourceEditorOptions = { ...this.sourceEditorOptions, language: operation.sourceLanguage };
+        this.outputEditorOptions = { ...this.outputEditorOptions, language: operation.outputLanguage };
+        this.convert(operation);
+    }
+
+    convert(operation: IOperation) {
+        try {
+            let srcText = this.sourceEditorText;
+            switch (operation.value) {
+                case "json-blob":
+                    this.outputEditorText = JSON.parse(this.sourceEditorText);
+                    break;
+                case "json-parse":
+                    try {
+                        let code = JSON.parse(this.sourceEditorText);
+                        console.log(typeof code);
+                        if (typeof code == "object") {
+                            alert("Sorry! Object cannot be converted to object.");
+                            return;
+                        }
+                        {
+                            this.outputEditorText = `${code}`;
+                            this.outputEditor.updateOptions({ wordWrap: "bounded" });
+                        }
+                    } catch (err) {
+                        // alert(err);
+                    }
+                    break;
+                case "json-stringify":
+                    this.outputEditorText = JSON.stringify(uglify(srcText));
+                    this.outputEditor.updateOptions({ wordWrap: "bounded" });
+                    break;
+
+                default:
+                    break;
+            }
+        } catch (err) {
+            // alert(err);
+        }
+    }
+
+    prettifySource() {
+        this.sourceEditorText = prettify(this.sourceEditorText);
+    }
+
+    uglifySource() {
+        this.sourceEditorText = uglify(this.sourceEditorText);
+    }
+
+    prettifyOutput() {
+        this.outputEditorText = prettify(this.outputEditorText);
+    }
+
+    uglifyOutput() {
+        this.outputEditorText = uglify(this.outputEditorText);
+    }
+}
+
+interface IOperation {
+    value: "json-blob" | "json-stringify" | "json-parse";
+    text: string;
+    sourceLanguage: string;
+    outputLanguage: string;
 }
