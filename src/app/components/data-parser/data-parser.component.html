@@ -1,32 +1,42 @@
 <div class="data-parser">
-    <div class="data-parser__editors">
-        <div class="data-parser__editors__panel data-parser__editors__panel-1 fix">
-            <ngx-monaco-editor [options]="editorOptions1" [(ngModel)]="code1" (onInit)="editor1Init($event)" style="height: 100%"></ngx-monaco-editor>
-        </div>
-        <div class="data-parser__editors__panel data-parser__editors__panel-2 fix">
-          <ngx-json-viewer *ngIf="currentOperation =='json-blob'" [json]="code2"  [expanded]="true"></ngx-json-viewer>
-          <ngx-monaco-editor *ngIf="currentOperation !='json-blob'" [options]="editorOptions2" [(ngModel)]="code2" (onInit)="editor2Init($event)" style="height: 100%"></ngx-monaco-editor>
-        </div>
-    </div>
-    <div class="data-parser__converter">
-        <div class="data-parser__converter__convert">
-            <div class="data-parser__converter__convert__from">
-                <mat-form-field appearance="outline">
-                    <mat-label>Chose Operation</mat-label>
-                    <mat-select>
-                      <mat-option *ngFor="let dataOperation of dataOperations; let i = index" [value]="dataOperation.value" (click)="changeOperation(dataOperation.value)">
-                        {{dataOperation.viewValue}}
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-            </div>
-        </div>
-        <div class="data-parser__converter__convert__button-2">
-          <button mat-raised-button color="accent" (click)="prettify()">Pretify source</button>
-          <button mat-raised-button color="accent" (click)="uglify()">uglify source</button>
+  <div class="data-parser__editors">
+    <div class="data-parser__editors__panel data-parser__editors__panel-1 fix">
+      <ngx-monaco-editor [options]="sourceEditorOptions" [(ngModel)]="sourceEditorText" (onInit)="onSourceEditorInit($event)" style="height: 100%"></ngx-monaco-editor>
+      <div class="data-parser__editors__panel__helper-buttons">
+        <button mat-raised-button color="accent" (click)="prettifySource()">prettify</button>
+        <button mat-raised-button color="accent" (click)="uglifySource()">minify</button>
       </div>
-        <div class="data-parser__converter__convert__button">
-            <button mat-raised-button color="primary" (click)="convert(currentOperation)">Convert</button>
-        </div>
     </div>
+    <div class="data-parser__editors__panel data-parser__editors__panel-2 fix">
+      <ngx-json-viewer *ngIf="currentOperation.value == 'json-blob'" [json]="outputEditorText" [expanded]="true"></ngx-json-viewer>
+      <ngx-monaco-editor
+        *ngIf="currentOperation.value != 'json-blob'"
+        [options]="outputEditorOptions"
+        [(ngModel)]="outputEditorText"
+        (onInit)="onOutputEditorInit($event)"
+        style="height: 100%"
+      ></ngx-monaco-editor>
+      <div class="data-parser__editors__panel__helper-buttons">
+        <button mat-raised-button color="accent" (click)="prettifyOutput()">prettify</button>
+        <button mat-raised-button color="accent" (click)="uglifyOutput()">minify</button>
+      </div>
+    </div>
+  </div>
+  <div class="data-parser__converter">
+    <div class="data-parser__converter__convert">
+      <div class="data-parser__converter__convert__from">
+        <mat-form-field appearance="outline">
+          <mat-label>Choose an operation</mat-label>
+          <mat-select>
+            <mat-option *ngFor="let operation of availableOperations; let i = index" [value]="operation.value" (click)="onOperationChange(operation)">
+              {{ operation.text }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+    <div class="data-parser__converter__convert__button">
+      <button mat-raised-button color="primary" (click)="convert(currentOperation)">Convert</button>
+    </div>
+  </div>
 </div>
